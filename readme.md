@@ -14,3 +14,13 @@ The result for a 1GB set of data is as follows
 19 seconds run time on a AMD Ryzen 5 3600 with a NVMe drive and 32GB of RAM. A bigger memory than data set size allows for sorting only in memory, but we can modify the `--memory-limit` parameter to split the input data in to chunks that will fit in memory.
 
 Results for 100GB file TODO
+
+
+Requirements
+---
+
+The only dependancy the apps have is the `System.CommandLine` library for easy cli argument parsing.
+
+License
+---
+MIT
