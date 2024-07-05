@@ -24,7 +24,7 @@ Options:
   --output <output>            Path pointing where to put the results. Will be overwritten [default: output.txt]
   --target-size <target-size>  Target file size in bytes. Note: output can be a bit bigger just to avoid cutting the line content [default: 1073741824]
   --dictionary <dictionary>    Dictionary of words separated with new lines that will be used to generate the result file. If not specified the bundled 
-                               one will be used [default: /home/tosyu/Projects/work/LineSorterGeneratorApp/bin/Debug/net8.0/words.txt]
+                               one will be used [default: words.txt]
   --version                    Show version information
   -?, -h, --help               Show help and usage information
 ```
