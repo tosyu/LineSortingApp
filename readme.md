@@ -7,6 +7,49 @@ This is a simple example for an external sorting algorithm which can sort big se
 [Number]. [Word] [Word]... [WordN]
 ```
 
+Usage
+---
+
+Generator
+
+```
+$ ./LineSorterGeneratorApp -h
+Description:
+  Application generating [num]. [text] line filled text files
+
+Usage:
+  LineSorterGeneratorApp [options]
+
+Options:
+  --output <output>            Path pointing where to put the results. Will be overwritten [default: output.txt]
+  --target-size <target-size>  Target file size in bytes. Note: output can be a bit bigger just to avoid cutting the line content [default: 1073741824]
+  --dictionary <dictionary>    Dictionary of words separated with new lines that will be used to generate the result file. If not specified the bundled 
+                               one will be used [default: /home/tosyu/Projects/work/LineSorterGeneratorApp/bin/Debug/net8.0/words.txt]
+  --version                    Show version information
+  -?, -h, --help               Show help and usage information
+```
+
+Sorter
+
+```
+$ ./LineSorterApp -h
+Description:
+  Application for sorting [num]. [text] line filled text files
+
+Usage:
+  LineSorterApp [options]
+
+Options:
+  --input <input> (REQUIRED)     Path pointing to the the unsorted file
+  --output <output>              Path pointing where to put the results. Will be overwritten [default: sorted.txt]
+  --memory-limit <memory-limit>  Memory limit for the process in bytes. If not supplied half of available RAM will be used [default: 16784545792]
+  --version                      Show version information
+  -?, -h, --help                 Show help and usage information
+```
+
+Results
+---
+
 The result for a 1GB set of data is as follows
 
 ![Result of operation on 1GB set of data](./img/result-1gb.png)
