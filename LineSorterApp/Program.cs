@@ -2,11 +2,14 @@
 using System.CommandLine;
 
 using LineSorterApp.Helpers;
+using LineSorterApp.DataStructrues;
 
 namespace LineSorterApp;
 
-class Program {
-    public static async Task<int> Main(string[] args) {
+class Program
+{
+    public static async Task<int> Main(string[] args)
+    {
         var inputFileOption = new Option<FileInfo>(
             name: "--input",
             description: "Path pointing to the the unsorted file"
@@ -37,12 +40,14 @@ class Program {
         return await rootCommand.InvokeAsync(args);
     }
 
-    static long FetchAvailableMemory() {
+    static long FetchAvailableMemory()
+    {
         var memoryInfo = GC.GetGCMemoryInfo();
         return memoryInfo.TotalAvailableMemoryBytes / 2;
     }
 
-    static void Run(FileInfo inputFile, FileInfo outputFile, long memoryLimit) {
+    static void Run(FileInfo inputFile, FileInfo outputFile, long memoryLimit)
+    {
         var stopWatch = new Stopwatch();
         stopWatch.Start();
 
@@ -50,7 +55,7 @@ class Program {
 
         temporaryFiles.SortSplits();
         temporaryFiles.MergeSplitsInto(outputFile);
-    
+
         temporaryFiles.ForEach(file => File.Delete(file.FullName));
 
         stopWatch.Stop();

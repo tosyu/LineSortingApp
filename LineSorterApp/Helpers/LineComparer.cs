@@ -24,11 +24,11 @@ class LineComparer : IComparer<string>
         }
 
         // if texts are same then sort by id
-        if (Int32.TryParse(firstLine[0..firstLineIdSeparator], out var firstLineId)) {
+        if (Int32.TryParse(firstLine[0..(firstLineIdSeparator - 2)], out var firstLineId) == false) {
             throw new Exception("Could not parse number!");
         }
 
-        if (Int32.TryParse(secondLine[0..secondLineIdSeparator], out var secondLineId)) {
+        if (Int32.TryParse(secondLine[0..(secondLineIdSeparator - 2)], out var secondLineId) == false) {
             throw new Exception("Could not parse number!");
         }
 

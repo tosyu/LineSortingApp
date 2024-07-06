@@ -1,4 +1,5 @@
 using System.Text;
+using LineSorterApp.DataStructrues;
 
 namespace LineSorterApp.Helpers;
 
@@ -67,83 +68,31 @@ public static class FileUtils
 
     public static void MergeSplitsInto(this List<FileInfo> inputFiles, FileInfo outputFile)
     {
-        using var outputFileStream = File.Open(outputFile.FullName, FileMode.Create, FileAccess.Write);
-        using var firstFileStream = File.Open(inputFiles.First().FullName, FileMode.Open, FileAccess.Read);
-
-        firstFileStream.CopyTo(outputFileStream);
-
-        outputFileStream.Close();
-        firstFileStream.Close();
-
-        inputFiles.Skip(1).ToList().ForEach(file => MergeFilesPair(outputFile, file));
-    }
-
-    private static void MergeFilesPair(FileInfo firstFile, FileInfo secondFile) {
-        var comparer = new LineComparer();
-        var temporaryFile = new FileInfo(Path.GetTempFileName());
-        using var temporaryFileStream = new StreamWriter(temporaryFile.FullName, false, Encoding.ASCII);
-        using var firstFileReader = new StreamReader(firstFile.FullName, Encoding.ASCII);
-        using var secondFileReader = new StreamReader(secondFile.FullName, Encoding.ASCII);
-
-        string? firstLine = null;
-        string? secondLine = null;
-
-        // merge files keeping the sorting order
-        while (firstFileReader.Peek() >= 0 && secondFileReader.Peek() >= 0) {
-            firstLine ??= firstFileReader.ReadLine();
-            secondLine ??= secondFileReader.ReadLine();
-
-            if (firstLine != null && secondLine != null) {
-                var compareLines = comparer.Compare(firstLine, secondLine);
-                if (compareLines > 1) {                    
-                    temporaryFileStream.WriteLine(firstLine);
-                    firstLine = null;
-                } else {
-                    temporaryFileStream.WriteLine(secondLine);
-                    secondLine = null;                    
+        using var outputFileStream = new StreamWriter(outputFile.FullName, false, Encoding.ASCII);
+        var queue = new MinQueue();
+        
+        // setup queue
+        foreach (var file in inputFiles) {
+            var reader = new StreamReader(file.FullName, Encoding.ASCII);
+            if (reader.Peek() >= 0) {
+                var line = reader.ReadLine();
+                if (line != null) {
+                    queue.Qeueue(line, reader);
                 }
-            } else {               
-                break;
-            }          
-        }
-
-        // save anything that was left from the loop (line and file content)
-        if (firstLine != null) {
-            temporaryFileStream.WriteLine(firstLine);
-        }
-
-        if (secondLine != null) {
-            temporaryFileStream.WriteLine(secondLine);
-        }
-
-        while (firstFileReader.Peek() >= 0) {
-            var line = firstFileReader.ReadLine();
-            if (line != null) {
-                temporaryFileStream.WriteLine(line);
             }
         }
 
-        while (secondFileReader.Peek() >= 0) {
-            var line = secondFileReader.ReadLine();
-            if (line != null) {
-                temporaryFileStream.WriteLine(line);
+        do {
+            var node = queue.Dequeue();
+            string? line;
+            if (node != null) {
+                outputFileStream.WriteLine(node.data);
+                if (node.stream.Peek() >= 0 && (line = node.stream.ReadLine()) != null) {
+                    queue.Qeueue(line, node.stream);
+                } else {
+                    node.stream.Close();
+                }
             }
-        }
-
-        firstFileReader.Close();
-        secondFileReader.Close();
-        temporaryFileStream.Close();
-
-        // overwrite the base file with merged file data
-        using var sourceStream = File.Open(temporaryFile.FullName, FileMode.Open, FileAccess.Read);
-        using var destinationStream = File.Open(firstFile.FullName, FileMode.Open, FileAccess.Write);
-
-        sourceStream.CopyTo(destinationStream);
-
-        destinationStream.Close();
-        temporaryFileStream.Close();
-
-        // cleanup
-        File.Delete(temporaryFile.FullName);
+        } while (queue.IsEmpty == false);
     }
 }
