@@ -45,7 +45,7 @@ Options:
   --memory-limit <memory-limit>  Memory limit for the process in bytes. If not supplied quarter of available RAM will be used [default: RAM/4]
   --version                      Show version information
   -?, -h, --help                 Show help and usage information
-```![alt text](image.png)
+```
 
 Results
 ---
