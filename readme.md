@@ -76,8 +76,8 @@ From what I observed the base is 3xinput size, since we need space for the input
 Requirements
 ---
 
-The only dependency the apps have is the `System.CommandLine` library for easy cli argument parsing.
-dependency
+The only dependency the apps have is the `System.CommandLine` library for easy cli argument parsing. dependency
+
 License
 ---
 MIT
