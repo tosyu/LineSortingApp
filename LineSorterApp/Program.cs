@@ -27,7 +27,7 @@ class Program
         var memoryLimitOption = new Option<long>(
             name: "--memory-limit",
             () => FetchAvailableMemory(),
-            description: "Memory limit for the process in bytes. If not supplied half of available RAM will be used"
+            description: "Memory limit for the process in bytes. If not supplied quarter of available RAM will be used"
         );
 
         var rootCommand = new RootCommand("Application for sorting [num]. [text] line filled text files");
@@ -43,7 +43,7 @@ class Program
     static long FetchAvailableMemory()
     {
         var memoryInfo = GC.GetGCMemoryInfo();
-        return memoryInfo.TotalAvailableMemoryBytes / 2;
+        return memoryInfo.TotalAvailableMemoryBytes / 4;
     }
 
     static void Run(FileInfo inputFile, FileInfo outputFile, long memoryLimit)
