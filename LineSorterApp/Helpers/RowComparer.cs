@@ -1,3 +1,4 @@
+using System.Globalization;
 using LineSorterApp.DataStructures;
 
 namespace LineSorterApp.Helpers;
@@ -6,7 +7,7 @@ class RowComparer : IComparer<Row>
 {
     public int Compare(Row x, Row y)
     {
-        var stringComparisionResult = x.Content.CompareTo(y.Content);
+        var stringComparisionResult = string.Compare(x.Content, y.Content, true, CultureInfo.InvariantCulture);
 
         if (stringComparisionResult != 0)
         {
