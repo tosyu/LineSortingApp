@@ -18,7 +18,7 @@ public static class FileUtils
         // to avoid out of memory exception
         for (var i = 0; i < tempFileCount; i++)
         {
-            var tempFile = new FileInfo(Path.Join(Path.GetDirectoryName(temporaryFolder.FullName), Path.GetFileName(Path.GetTempFileName())));
+            var tempFile = new FileInfo(Path.Join(temporaryFolder.FullName, Path.GetFileName(Path.GetTempFileName())));
             List<Row> rows = [];
             long tempFileSize = 0;
             while (inputReader.Peek() >= 0)
