@@ -1,4 +1,4 @@
-namespace LineSorterApp.DataStructrues;
+namespace LineSorterApp.DataStructures;
 
 public class QueueNode
     {

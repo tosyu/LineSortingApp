@@ -1,6 +1,6 @@
 using LineSorterApp.Helpers;
 
-namespace LineSorterApp.DataStructrues;
+namespace LineSorterApp.DataStructures;
 
 public class MinQueue
 {
@@ -9,7 +9,7 @@ public class MinQueue
 
     public bool IsEmpty => first == null;
 
-    public void Qeueue(string data, StreamReader associatedStream)
+    public void Queue(string data, StreamReader associatedStream)
     {
         var newNode = new QueueNode(data, associatedStream);
 

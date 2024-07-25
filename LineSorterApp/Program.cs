@@ -2,7 +2,8 @@
 using System.CommandLine;
 
 using LineSorterApp.Helpers;
-using LineSorterApp.DataStructrues;
+using LineSorterApp.DataStructures;
+using System.Text;
 
 namespace LineSorterApp;
 

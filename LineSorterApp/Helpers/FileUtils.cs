@@ -1,5 +1,5 @@
 using System.Text;
-using LineSorterApp.DataStructrues;
+using LineSorterApp.DataStructures;
 
 namespace LineSorterApp.Helpers;
 
@@ -25,24 +25,22 @@ public static class FileUtils
             {
                 // advance seek only if start or line written
                 line ??= inputReader.ReadLine();
-                if (line != null)
-                {
-                    var lineSize = Encoding.ASCII.GetByteCount(line);
-                    if (tempFileSize + lineSize < sizeLimit)
-                    {
-                        lines.Add(line);
-                        tempFileSize += lineSize;
-                        line = null;
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-                else
+
+                if (line == null)
                 {
                     break;
                 }
+
+                var lineSize = Encoding.ASCII.GetByteCount(line);
+
+                if (tempFileSize + lineSize > sizeLimit)
+                {
+                    break;
+                }
+
+                lines.Add(line);
+                tempFileSize += lineSize;
+                line = null;
             }
 
             lines.Sort(comparer);
@@ -55,43 +53,38 @@ public static class FileUtils
         return temporaryFiles;
     }
 
-    public static void SortSplits(this List<FileInfo> inputFiles)
-    {
-        var comparer = new LineComparer();
-        foreach (var file in inputFiles) {
-            var lines = File.ReadAllLines(file.FullName).ToList();
-
-            // sorting purely in memory
-            lines.Sort(comparer);
-
-            File.WriteAllLines(file.FullName, lines);
-        }
-    }
-
     public static void MergeSplitsInto(this List<FileInfo> inputFiles, FileInfo outputFile)
     {
         using var outputFileStream = new StreamWriter(outputFile.FullName, false, Encoding.ASCII);
         var queue = new MinQueue();
-        
+
         // setup queue
-        foreach (var file in inputFiles) {
+        foreach (var file in inputFiles)
+        {
             var reader = new StreamReader(file.FullName, Encoding.ASCII);
-            if (reader.Peek() >= 0) {
+            if (reader.Peek() >= 0)
+            {
                 var line = reader.ReadLine();
-                if (line != null) {
-                    queue.Qeueue(line, reader);
+                if (line != null)
+                {
+                    queue.Queue(line, reader);
                 }
             }
         }
 
-        do {
+        do
+        {
             var node = queue.Dequeue();
             string? line;
-            if (node != null) {
+            if (node != null)
+            {
                 outputFileStream.WriteLine(node.data);
-                if (node.stream.Peek() >= 0 && (line = node.stream.ReadLine()) != null) {
-                    queue.Qeueue(line, node.stream);
-                } else {
+                if (node.stream.Peek() >= 0 && (line = node.stream.ReadLine()) != null)
+                {
+                    queue.Queue(line, node.stream);
+                }
+                else
+                {
                     node.stream.Close();
                 }
             }
