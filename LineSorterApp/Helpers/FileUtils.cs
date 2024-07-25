@@ -5,20 +5,21 @@ namespace LineSorterApp.Helpers;
 
 public static class FileUtils
 {
-    public static List<FileInfo> SplitBySize(this FileInfo inputFile, long sizeLimit, FileInfo temporaryFolder)
+    public static List<FileInfo> SortAndSplitBySize(this FileInfo inputFile, long sizeLimit, FileInfo temporaryFolder)
     {
         List<FileInfo> temporaryFiles = [];
 
         using var inputReader = new StreamReader(inputFile.FullName, Encoding.ASCII);
         var tempFileCount = Math.Ceiling((double)inputFile.Length / sizeLimit);
         string? line = null;
+        var comparer = new LineComparer();
 
         // split main file in to smaller than available memory chunks
         // to avoid out of memory exception        
         for (var i = 0; i < tempFileCount; i++)
         {
             var tempFile = new FileInfo(Path.Join(Path.GetDirectoryName(temporaryFolder.FullName), Path.GetFileName(Path.GetTempFileName())));
-            var tempWrite = new StreamWriter(tempFile.FullName, false, Encoding.ASCII);
+            List<string> lines = [];
             long tempFileSize = 0;
             while (inputReader.Peek() >= 0)
             {
@@ -29,7 +30,7 @@ public static class FileUtils
                     var lineSize = Encoding.ASCII.GetByteCount(line);
                     if (tempFileSize + lineSize < sizeLimit)
                     {
-                        tempWrite.WriteLine(line);
+                        lines.Add(line);
                         tempFileSize += lineSize;
                         line = null;
                     }
@@ -44,7 +45,8 @@ public static class FileUtils
                 }
             }
 
-            tempWrite.Close();
+            lines.Sort(comparer);
+            File.WriteAllLines(tempFile.FullName, lines);
             temporaryFiles.Add(tempFile);
         }
 

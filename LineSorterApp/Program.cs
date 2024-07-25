@@ -58,9 +58,8 @@ class Program
         var stopWatch = new Stopwatch();
         stopWatch.Start();
 
-        var temporaryFiles = inputFile.SplitBySize(memoryLimit, temporaryFolder);
+        var temporaryFiles = inputFile.SortAndSplitBySize(memoryLimit, temporaryFolder);
 
-        temporaryFiles.SortSplits();
         temporaryFiles.MergeSplitsInto(outputFile);
 
         temporaryFiles.ForEach(file => File.Delete(file.FullName));
