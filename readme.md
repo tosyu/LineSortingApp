@@ -66,6 +66,7 @@ Also here is a screenshot of first few lines of the output file
 
 ![Sorted file content](./img/sorted.txt.png)
 
+The first lines with A could look that somethings wrong, but in 100GB of lines the generator just spit out few that are with one word from words.txt (first line)
 
 Memory requirements
 ---
