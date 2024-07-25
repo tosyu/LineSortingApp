@@ -24,6 +24,12 @@ class Program
             description: "Path pointing where to put the results. Will be overwritten"
         );
 
+        var temporaryFolderOption = new Option<FileInfo>(
+            name: "--temporary-directory",
+            () => new FileInfo(Path.GetTempPath()),
+            description: "Path for temporary files, if not specified the system user temporary folder will be used"
+        );
+
         var memoryLimitOption = new Option<long>(
             name: "--memory-limit",
             () => FetchAvailableMemory(),
@@ -33,9 +39,10 @@ class Program
         var rootCommand = new RootCommand("Application for sorting [num]. [text] line filled text files");
         rootCommand.AddOption(inputFileOption);
         rootCommand.AddOption(outputFileOption);
+        rootCommand.AddOption(temporaryFolderOption);
         rootCommand.AddOption(memoryLimitOption);
 
-        rootCommand.SetHandler(Run, inputFileOption, outputFileOption, memoryLimitOption);
+        rootCommand.SetHandler(Run, inputFileOption, outputFileOption, temporaryFolderOption, memoryLimitOption);
 
         return await rootCommand.InvokeAsync(args);
     }
@@ -46,12 +53,12 @@ class Program
         return memoryInfo.TotalAvailableMemoryBytes / 4;
     }
 
-    static void Run(FileInfo inputFile, FileInfo outputFile, long memoryLimit)
+    static void Run(FileInfo inputFile, FileInfo outputFile, FileInfo temporaryFolder, long memoryLimit)
     {
         var stopWatch = new Stopwatch();
         stopWatch.Start();
 
-        var temporaryFiles = inputFile.SplitBySize(memoryLimit);
+        var temporaryFiles = inputFile.SplitBySize(memoryLimit, temporaryFolder);
 
         temporaryFiles.SortSplits();
         temporaryFiles.MergeSplitsInto(outputFile);

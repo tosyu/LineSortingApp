@@ -5,7 +5,7 @@ namespace LineSorterApp.Helpers;
 
 public static class FileUtils
 {
-    public static List<FileInfo> SplitBySize(this FileInfo inputFile, long sizeLimit)
+    public static List<FileInfo> SplitBySize(this FileInfo inputFile, long sizeLimit, FileInfo temporaryFolder)
     {
         List<FileInfo> temporaryFiles = [];
 
@@ -17,7 +17,7 @@ public static class FileUtils
         // to avoid out of memory exception        
         for (var i = 0; i < tempFileCount; i++)
         {
-            var tempFile = new FileInfo(Path.GetTempFileName());
+            var tempFile = new FileInfo(Path.Join(Path.GetDirectoryName(temporaryFolder.FullName), Path.GetFileName(Path.GetTempFileName())));
             var tempWrite = new StreamWriter(tempFile.FullName, false, Encoding.ASCII);
             long tempFileSize = 0;
             while (inputReader.Peek() >= 0)
