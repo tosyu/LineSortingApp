@@ -12,14 +12,14 @@ public static class FileUtils
         using var inputReader = new StreamReader(inputFile.FullName, Encoding.ASCII);
         var tempFileCount = Math.Ceiling((double)inputFile.Length / sizeLimit);
         string? line = null;
-        var comparer = new LineComparer();
+        var comparer = new RowComparer();
 
         // split main file in to smaller than available memory chunks
-        // to avoid out of memory exception        
+        // to avoid out of memory exception
         for (var i = 0; i < tempFileCount; i++)
         {
             var tempFile = new FileInfo(Path.Join(Path.GetDirectoryName(temporaryFolder.FullName), Path.GetFileName(Path.GetTempFileName())));
-            List<string> lines = [];
+            List<Row> rows = [];
             long tempFileSize = 0;
             while (inputReader.Peek() >= 0)
             {
@@ -38,13 +38,13 @@ public static class FileUtils
                     break;
                 }
 
-                lines.Add(line);
+                rows.Add(line.ToRow());
                 tempFileSize += lineSize;
                 line = null;
             }
 
-            lines.Sort(comparer);
-            File.WriteAllLines(tempFile.FullName, lines);
+            rows.Sort(comparer);
+            rows.WriteAllRows(tempFile.FullName);
             temporaryFiles.Add(tempFile);
         }
 
@@ -78,7 +78,7 @@ public static class FileUtils
             string? line;
             if (node != null)
             {
-                outputFileStream.WriteLine(node.data);
+                outputFileStream.WriteLine(node.data.ToFormattedString());
                 if (node.stream.Peek() >= 0 && (line = node.stream.ReadLine()) != null)
                 {
                     queue.Queue(line, node.stream);

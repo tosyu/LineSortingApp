@@ -5,20 +5,21 @@ namespace LineSorterApp.DataStructures;
 public class MinQueue
 {
     private QueueNode? first;
-    private readonly IComparer<string> lineComparer = new LineComparer();
+    private readonly IComparer<Row> rowComparer = new RowComparer();
 
     public bool IsEmpty => first == null;
 
     public void Queue(string data, StreamReader associatedStream)
     {
         var newNode = new QueueNode(data, associatedStream);
+        var dataRow = data.ToRow();
 
         if (first == null) {
             first = newNode;
             return;
         }
 
-        if (lineComparer.Compare(first.data, data) > 0) {            
+        if (rowComparer.Compare(first.data, dataRow) > 0) {
             newNode.next = first;
             first.prev = newNode;
             first = newNode;
@@ -32,14 +33,14 @@ public class MinQueue
 
     private void QueueIn(QueueNode root, QueueNode newNode)
     {
-        if (lineComparer.Compare(root.data, newNode.data) > 0)
+        if (rowComparer.Compare(root.data, newNode.data) > 0)
         {
             if (root.prev != null)
             {
                 root.prev.next = newNode;
                 newNode.prev = root.prev;
             }
-            
+
             root.prev = newNode;
             newNode.next = root;
 
