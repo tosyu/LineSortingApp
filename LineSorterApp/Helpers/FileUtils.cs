@@ -57,11 +57,13 @@ public static class FileUtils
     {
         using var outputFileStream = new StreamWriter(outputFile.FullName, false, Encoding.ASCII);
         var queue = new MinQueue();
+        List<StreamReader> streams = [];
 
         // setup queue
         foreach (var file in inputFiles)
         {
             var reader = new StreamReader(file.FullName, Encoding.ASCII);
+            streams.Add(reader);
             if (reader.Peek() >= 0)
             {
                 var line = reader.ReadLine();
@@ -83,11 +85,16 @@ public static class FileUtils
                 {
                     queue.Queue(line, node.stream);
                 }
-                else
-                {
-                    node.stream.Close();
-                }
             }
         } while (queue.IsEmpty == false);
+
+        // cleanup
+        streams.ForEach(stream =>
+        {
+            if (stream.BaseStream != null)
+            {
+                stream.Close();
+            }
+        });
     }
 }
