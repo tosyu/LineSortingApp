@@ -53,16 +53,16 @@ public static class FileUtils
         return temporaryFiles;
     }
 
-    public static void MergeSplitsInto(this List<FileInfo> inputFiles, FileInfo outputFile)
+    public static void MergeSplitsInto(this List<FileInfo> inputFiles, FileInfo outputFile, int bufferSize)
     {
-        using var outputFileStream = new StreamWriter(outputFile.FullName, false, Encoding.ASCII);
+        using var outputFileStream = new StreamWriter(outputFile.FullName, false, Encoding.ASCII, bufferSize);
         var queue = new MinQueue();
         List<StreamReader> streams = [];
-
+        
         // setup queue
         foreach (var file in inputFiles)
         {
-            var reader = new StreamReader(file.FullName, Encoding.ASCII);
+            var reader = new StreamReader(file.FullName, Encoding.ASCII, false, bufferSize);
             streams.Add(reader);
             if (reader.Peek() >= 0)
             {
@@ -80,7 +80,8 @@ public static class FileUtils
             string? line;
             if (node != null)
             {
-                outputFileStream.WriteLine(node.data.ToFormattedString());
+                var data = node.data.ToFormattedString() + Environment.NewLine;
+                outputFileStream.Write(Encoding.ASCII.GetBytes(data));
                 if (node.stream.Peek() >= 0 && (line = node.stream.ReadLine()) != null)
                 {
                     queue.Queue(line, node.stream);
