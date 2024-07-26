@@ -2,15 +2,11 @@
 using System.CommandLine;
 
 using LineSorterApp.Helpers;
-using LineSorterApp.DataStructures;
-using System.Text;
 
 namespace LineSorterApp;
 
 class Program
 {
-    private static int StreamMaxBufferSize = 1048576;
-
     public static async Task<int> Main(string[] args)
     {
         var inputFileOption = new Option<FileInfo>(
@@ -63,7 +59,7 @@ class Program
 
         var temporaryFiles = inputFile.SortAndSplitBySize(memoryLimit, temporaryFolder);
 
-        temporaryFiles.MergeSplitsInto(outputFile, StreamMaxBufferSize);
+        temporaryFiles.MergeSplitsInto(outputFile, memoryLimit);
 
         temporaryFiles.ForEach(file => File.Delete(file.FullName));
 

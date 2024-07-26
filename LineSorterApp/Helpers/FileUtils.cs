@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text;
 using LineSorterApp.DataStructures;
 
@@ -53,49 +54,77 @@ public static class FileUtils
         return temporaryFiles;
     }
 
-    public static void MergeSplitsInto(this List<FileInfo> inputFiles, FileInfo outputFile, int bufferSize)
+    public static void MergeSplitsInto(this List<FileInfo> inputFiles, FileInfo outputFile, long bufferSize)
     {
-        using var outputFileStream = new StreamWriter(outputFile.FullName, false, Encoding.ASCII, bufferSize);
-        var queue = new MinQueue();
-        List<StreamReader> streams = [];
+        var bufferSizePerFile = Math.Max(bufferSize / (inputFiles.Count + 1), 134217728); // 128M min
+        using var outputFileStream = new StreamWriter(outputFile.FullName, false, Encoding.ASCII);
+        var queue = new SortedQueue();
+        var readBuffers = new Dictionary<StreamReader, Queue<string>>();
+        var streamsToDelete = new List<StreamReader>();
+        var sw = new Stopwatch();
         
-        // setup queue
-        foreach (var file in inputFiles)
+        // setup buffers
+        inputFiles.ForEach(file => readBuffers.Add(new StreamReader(file.FullName, Encoding.ASCII, false), []));
+
+        while (true)
         {
-            var reader = new StreamReader(file.FullName, Encoding.ASCII, false, bufferSize);
-            streams.Add(reader);
-            if (reader.Peek() >= 0)
-            {
-                var line = reader.ReadLine();
-                if (line != null)
-                {
-                    queue.Queue(line, reader);
+            // loop that will either fill the read queue or enqueue the sorted queue or close the buffer
+            foreach (KeyValuePair<StreamReader, Queue<string>> readBuffer in readBuffers) {
+                int currentBufferSize = 0;
+                string? line = null;
+                StreamReader stream = readBuffer.Key;
+                Queue<string> readQueue = readBuffer.Value;
+
+                // fill the read queue which acts as a buffer to decrease I/O
+                if (readQueue.Count == 0) {
+                    while (stream.BaseStream?.CanRead == true && currentBufferSize < bufferSizePerFile && stream.Peek() >= 0) {
+                        line ??= stream.ReadLine();
+
+                        if (line == null) {
+                            break;
+                        }
+
+                        var lineSize = Encoding.ASCII.GetByteCount(line);
+
+                        if (currentBufferSize + lineSize > bufferSizePerFile)
+                        {
+                            break;
+                        }
+
+                        readQueue.Enqueue(line);
+                        currentBufferSize += lineSize;
+                        line = null;
+                    }
+                } else { // if there still are elements in the read queue move one to the sorted queue
+                    queue.Enqueue(readQueue.Dequeue());
                 }
+
+                // no more data
+                if (stream.BaseStream?.CanRead == true && stream.Peek() == -1) {
+                    stream.Close();
+                }
+
+                // stream closed and read queue is empty so we mark the read buffer to be disposed
+                if (stream.BaseStream?.CanRead == false && readQueue.Count == 0)
+                {
+                    streamsToDelete.Add(stream);
+                }
+            }
+
+            // remove unnecessary read buffer
+            streamsToDelete.ForEach(stream => readBuffers.Remove(stream));
+
+            // write all data from the sorted queue
+            SortedQueueNode? node;
+            while (queue.IsEmpty == false && (node = queue.Dequeue()) != null)
+            {
+                outputFileStream.WriteLine(node.data.ToFormattedString());
+            }
+
+            // quit if nothing left
+            if (readBuffers.Count == 0) {
+                break;
             }
         }
-
-        do
-        {
-            var node = queue.Dequeue();
-            string? line;
-            if (node != null)
-            {
-                var data = node.data.ToFormattedString() + Environment.NewLine;
-                outputFileStream.Write(Encoding.ASCII.GetBytes(data));
-                if (node.stream.Peek() >= 0 && (line = node.stream.ReadLine()) != null)
-                {
-                    queue.Queue(line, node.stream);
-                }
-            }
-        } while (queue.IsEmpty == false);
-
-        // cleanup
-        streams.ForEach(stream =>
-        {
-            if (stream.BaseStream != null)
-            {
-                stream.Close();
-            }
-        });
     }
 }
