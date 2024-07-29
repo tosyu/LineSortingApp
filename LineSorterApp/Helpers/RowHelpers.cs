@@ -26,6 +26,11 @@ namespace LineSorterApp.Helpers
             writeStream.Close();
         }
 
+        public static void AppendAllRows(this List<Row> inputRows, StreamWriter writeStream)
+        {
+            inputRows.ForEach(row => writeStream.WriteLine(row.ToFormattedString()));
+        }
+
         public static string ToFormattedString(this Row row)
         {
             return $"{row.Id}. {row.Content}";

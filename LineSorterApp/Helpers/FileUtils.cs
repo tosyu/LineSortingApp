@@ -58,10 +58,15 @@ public static class FileUtils
     {
         var bufferSizePerFile = Math.Max(bufferSize / (inputFiles.Count + 1), 134217728); // 128M min
         using var outputFileStream = new StreamWriter(outputFile.FullName, false, Encoding.ASCII);
-        var sortedQueue = new SortedQueue();
         var readBuffers = new Dictionary<StreamReader, Queue<string>>();
+        bool readBuffersEmpty;
         var streamsToDelete = new List<StreamReader>();
-        var sw = new Stopwatch();
+        var rowComparer = new RowComparer();
+        int lineSize;
+        int currentBufferSize;
+        string? line;
+        StreamReader stream;
+        Queue<string> readQueue;
 
         // setup buffers
         inputFiles.ForEach(file => readBuffers.Add(new StreamReader(file.FullName, Encoding.ASCII, false), []));
@@ -71,14 +76,15 @@ public static class FileUtils
             // loop that will either fill the read queue or enqueue the sorted queue or close the buffer
             foreach (KeyValuePair<StreamReader, Queue<string>> readBuffer in readBuffers)
             {
-                int currentBufferSize = 0;
-                string? line = null;
-                StreamReader stream = readBuffer.Key;
-                Queue<string> readQueue = readBuffer.Value;
+                currentBufferSize = 0;
+                line = null;
+                stream = readBuffer.Key;
+                readQueue = readBuffer.Value;
 
                 // fill the read queue which acts as a buffer to decrease I/O
                 if (readQueue.Count == 0)
                 {
+                    lineSize = 0;
                     while (stream.BaseStream?.CanRead == true && currentBufferSize < bufferSizePerFile && stream.Peek() >= 0)
                     {
                         line ??= stream.ReadLine();
@@ -88,7 +94,7 @@ public static class FileUtils
                             break;
                         }
 
-                        var lineSize = Encoding.ASCII.GetByteCount(line);
+                        lineSize = Encoding.ASCII.GetByteCount(line);
 
                         if (currentBufferSize + lineSize > bufferSizePerFile)
                         {
@@ -118,34 +124,49 @@ public static class FileUtils
             streamsToDelete.ForEach(stream => readBuffers.Remove(stream));
 
             // fill write queue
-            foreach (KeyValuePair<StreamReader, Queue<string>> readBuffer in readBuffers)
-            {
-                int currentBufferSize = 0;
-                string? line = null;
-                Queue<string> readQueue = readBuffer.Value;
-                if (currentBufferSize < bufferSizePerFile && readQueue.Count > 0)
+            currentBufferSize = 0;
+            line = null;
+            lineSize = 0;
+            var outputBuffer = new List<Row>();
+            var writeBufferFilled = false;
+
+            while (writeBufferFilled == false)
+            {                
+                readBuffersEmpty = true;
+                foreach (KeyValuePair<StreamReader, Queue<string>> readBuffer in readBuffers)
                 {
-                    line ??= readQueue.Dequeue();
+                    readQueue = readBuffer.Value;
 
-                    var lineSize = Encoding.ASCII.GetByteCount(line);
-
-                    if (currentBufferSize + lineSize > bufferSizePerFile)
+                    if (readQueue.Count == 0)
                     {
-                        break;
+                        continue;
                     }
 
-                    sortedQueue.Enqueue(line);
+                    readBuffersEmpty = false;
+
+                    line ??= readQueue.Dequeue();
+
+                    lineSize = Encoding.ASCII.GetByteCount(line);                   
+
+                    outputBuffer.Add(line.ToRow());
                     currentBufferSize += lineSize;
                     line = null;
+
+                    if (currentBufferSize >= bufferSizePerFile)
+                    {
+                        writeBufferFilled = true;
+                        break;
+                    }
+                }
+
+                if (readBuffersEmpty)
+                {
+                    writeBufferFilled = true;
                 }
             }
 
-            // write all data from the sorted queue
-            SortedQueueNode? node;
-            while (sortedQueue.IsEmpty == false && (node = sortedQueue.Dequeue()) != null)
-            {
-                outputFileStream.WriteLine(node.data.ToFormattedString());
-            }
+            outputBuffer.Sort(rowComparer);
+            outputBuffer.AppendAllRows(outputFileStream);
 
             // quit if nothing left
             if (readBuffers.Count == 0)
