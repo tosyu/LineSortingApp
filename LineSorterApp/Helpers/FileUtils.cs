@@ -58,29 +58,33 @@ public static class FileUtils
     {
         var bufferSizePerFile = Math.Max(bufferSize / (inputFiles.Count + 1), 134217728); // 128M min
         using var outputFileStream = new StreamWriter(outputFile.FullName, false, Encoding.ASCII);
-        var queue = new SortedQueue();
+        var sortedQueue = new SortedQueue();
         var readBuffers = new Dictionary<StreamReader, Queue<string>>();
         var streamsToDelete = new List<StreamReader>();
         var sw = new Stopwatch();
-        
+
         // setup buffers
         inputFiles.ForEach(file => readBuffers.Add(new StreamReader(file.FullName, Encoding.ASCII, false), []));
 
         while (true)
         {
             // loop that will either fill the read queue or enqueue the sorted queue or close the buffer
-            foreach (KeyValuePair<StreamReader, Queue<string>> readBuffer in readBuffers) {
+            foreach (KeyValuePair<StreamReader, Queue<string>> readBuffer in readBuffers)
+            {
                 int currentBufferSize = 0;
                 string? line = null;
                 StreamReader stream = readBuffer.Key;
                 Queue<string> readQueue = readBuffer.Value;
 
                 // fill the read queue which acts as a buffer to decrease I/O
-                if (readQueue.Count == 0) {
-                    while (stream.BaseStream?.CanRead == true && currentBufferSize < bufferSizePerFile && stream.Peek() >= 0) {
+                if (readQueue.Count == 0)
+                {
+                    while (stream.BaseStream?.CanRead == true && currentBufferSize < bufferSizePerFile && stream.Peek() >= 0)
+                    {
                         line ??= stream.ReadLine();
 
-                        if (line == null) {
+                        if (line == null)
+                        {
                             break;
                         }
 
@@ -95,12 +99,11 @@ public static class FileUtils
                         currentBufferSize += lineSize;
                         line = null;
                     }
-                } else { // if there still are elements in the read queue move one to the sorted queue
-                    queue.Enqueue(readQueue.Dequeue());
                 }
 
                 // no more data
-                if (stream.BaseStream?.CanRead == true && stream.Peek() == -1) {
+                if (stream.BaseStream?.CanRead == true && stream.Peek() == -1)
+                {
                     stream.Close();
                 }
 
@@ -114,15 +117,39 @@ public static class FileUtils
             // remove unnecessary read buffer
             streamsToDelete.ForEach(stream => readBuffers.Remove(stream));
 
+            // fill write queue
+            foreach (KeyValuePair<StreamReader, Queue<string>> readBuffer in readBuffers)
+            {
+                int currentBufferSize = 0;
+                string? line = null;
+                Queue<string> readQueue = readBuffer.Value;
+                if (currentBufferSize < bufferSizePerFile && readQueue.Count > 0)
+                {
+                    line ??= readQueue.Dequeue();
+
+                    var lineSize = Encoding.ASCII.GetByteCount(line);
+
+                    if (currentBufferSize + lineSize > bufferSizePerFile)
+                    {
+                        break;
+                    }
+
+                    sortedQueue.Enqueue(line);
+                    currentBufferSize += lineSize;
+                    line = null;
+                }
+            }
+
             // write all data from the sorted queue
             SortedQueueNode? node;
-            while (queue.IsEmpty == false && (node = queue.Dequeue()) != null)
+            while (sortedQueue.IsEmpty == false && (node = sortedQueue.Dequeue()) != null)
             {
                 outputFileStream.WriteLine(node.data.ToFormattedString());
             }
 
             // quit if nothing left
-            if (readBuffers.Count == 0) {
+            if (readBuffers.Count == 0)
+            {
                 break;
             }
         }
