@@ -2,8 +2,6 @@
 using System.CommandLine;
 
 using LineSorterApp.Helpers;
-using LineSorterApp.DataStructures;
-using System.Text;
 
 namespace LineSorterApp;
 
@@ -61,7 +59,7 @@ class Program
 
         var temporaryFiles = inputFile.SortAndSplitBySize(memoryLimit, temporaryFolder);
 
-        temporaryFiles.MergeSplitsInto(outputFile);
+        temporaryFiles.MergeSplitsInto(outputFile, memoryLimit);
 
         temporaryFiles.ForEach(file => File.Delete(file.FullName));
 
