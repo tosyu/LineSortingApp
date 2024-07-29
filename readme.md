@@ -70,7 +70,7 @@ My HDD setup is (compare with directories in previous screenshots):
 
 As for my main NVME if done only the 1GB test as 100GB is not really needed (and I don't have that much space)
 
-[!Results for 1GB on a NVME kingston drive](./img/env_nvme_res.png)
+![Results for 1GB on a NVME kingston drive](./img/env_nvme_res.png)
 
 [Deprecated] Results
 ---
