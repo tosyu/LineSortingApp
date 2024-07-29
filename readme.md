@@ -47,7 +47,32 @@ Options:
   -?, -h, --help                 Show help and usage information
 ```
 
+
 Results
+---
+
+I've manage to salvage and old 1TB HDD (magnetic) drive and tune the app to work with sequential i/o disks of this type (SDD and NVMEs are faster in random i/o so last merging
+phase was a lot faster for those drives).
+
+Now the app does:
+
+![Result of operation on 1GB and 100GB set of data on a HDD](./img/env_sdc_res.png)
+
+which is just under 1 minute per GB of work time for my setup.
+
+My HDD setup is (compare with directories in previous screenshots):
+
+![Mount point](./img/env_sdc_mount.png)
+
+![HDD Name/model](./img/env_sdc_name.png)
+
+![HDPARM results](./img/env_sdc_hdparm.png)
+
+As for my main NVME if done only the 1GB test as 100GB is not really needed (and I don't have that much space)
+
+[!Results for 1GB on a NVME kingston drive](./img/env_nvme_res.png)
+
+[Deprecated] Results
 ---
 
 The result for a 1GB set of data is as follows
