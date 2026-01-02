@@ -2,16 +2,16 @@ using LineSorterApp.Helpers;
 
 namespace LineSorterApp.DataStructures;
 
-public class MinQueue
+public class SortedQueue
 {
-    private QueueNode? first;
+    private SortedQueueNode? first;
     private readonly IComparer<Row> rowComparer = new RowComparer();
 
     public bool IsEmpty => first == null;
 
-    public void Queue(string data, StreamReader associatedStream)
+    public void Enqueue(string data)
     {
-        var newNode = new QueueNode(data, associatedStream);
+        var newNode = new SortedQueueNode(data);
         var dataRow = data.ToRow();
 
         if (first == null) {
@@ -31,7 +31,7 @@ public class MinQueue
         }
     }
 
-    private void QueueIn(QueueNode root, QueueNode newNode)
+    private void QueueIn(SortedQueueNode root, SortedQueueNode newNode)
     {
         if (rowComparer.Compare(root.data, newNode.data) > 0)
         {
@@ -56,7 +56,7 @@ public class MinQueue
         newNode.prev = root;
     }
 
-    public QueueNode? Dequeue() {
+    public SortedQueueNode? Dequeue() {
         var node = first;
         if (node?.next != null) {
             first = node.next;
